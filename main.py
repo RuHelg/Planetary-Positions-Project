@@ -1,5 +1,6 @@
 import requests
 import datetime
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -34,6 +35,7 @@ def get_planet_positions(date):
             'MAKE_EPHEM': 'YES',
             'EPHEM_TYPE': 'VECTORS',
             'CENTER': '500@10',  #  500@10 / 500@sun for sun as the center
+            'OUT_UNITS': 'AU-D',
             'VEC_TABLE': '1',
             'CSV_FORMAT': 'YES',
             'START_TIME': f"'{start_date_time}'",
@@ -70,6 +72,11 @@ def get_planet_positions(date):
             print(f"Error retrieving data for {planet}: {response.status_code}")
             print(f"Details: {response.text}")
 
+    # Manually construct the URL with the correct encoding
+    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    full_url = f"{url}?{query_string}"
+    print(f"Requesting URL: {full_url}")
+
     return planet_positions
 
 # Plots the positions of the planets in a 3D scatter plot.
@@ -79,16 +86,25 @@ def plot_positions(planet_positions):
 
     # Plot each planets position
     for planet, pos in planet_positions.items():
-        ax.scatter(pos['X'], pos['Y'], pos['Z'], label=planet)
-        ax.text(pos['X'], pos['Y'], pos['Z'], planet, fontsize=9)
+
+        # Calculate the log10-scaled X and Y coordinates
+        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1)  # Adding 1 to avoid log(0)
+        log_y = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
+        log_z = np.sign(pos['Z']) * np.log10(abs(pos['Z']) + 1)
+
+        ax.scatter(log_x, log_y, log_z, label=planet)
+        ax.text(log_x, log_y, log_z, planet, fontsize=9)
+
+        #ax.scatter(pos['X'], pos['Y'], pos['Z'], label=planet)
+        #ax.text(pos['X'], pos['Y'], pos['Z'], planet, fontsize=9)
 
     # Plot the Sun at origo
     ax.scatter(0, 0, 0, color='yellow', label='Sun', s=100)
 
     # Set plot labels and title
-    ax.set_xlabel("X (km)")
-    ax.set_ylabel("Y (km)")
-    ax.set_zlabel("Z (km)")
+    ax.set_xlabel("X (AU)")
+    ax.set_ylabel("Y (AU)")
+    ax.set_zlabel("Z (AU)")
     ax.set_title("Planetary Positions Relative to the Sun")
     ax.legend()
 
@@ -97,12 +113,58 @@ def plot_positions(planet_positions):
     #print(f"Plot saved as {PlanetaryPositionsPlot.png}")
     plt.show()
 
+
+def plot_solar_system_2d(planet_positions):
+    figure_size_cm = 20  # Set the figure size in cm
+    fig, ax = plt.subplots(figsize=(figure_size_cm/2.54, figure_size_cm/2.54))
+
+    # Plot the Sun at the center
+    ax.plot(0, 0, 'yo', markersize=12, label='Sun')
+
+    # Plot each planet in the X-Y plane
+    for planet, pos in planet_positions.items():
+
+        # Calculate the log10-scaled X and Y coordinates
+        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1)  # Adding 1 to avoid log(0)
+        log_y = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
+        log_z = np.sign(pos['Z']) * np.log10(abs(pos['Z']) + 1)
+
+        # Plot the planet in the transformed log scale
+        ax.plot(log_x, log_y, 'o', label=planet)
+        ax.text(log_x * 1.05, log_y * 1.05, planet, fontsize=9)
+
+        # Optional: Draw approximate orbit (circle in log scale)
+        distance = np.sqrt(log_x**2 + log_y**2) # Radius of the orbit
+        orbit = plt.Circle((0, 0), distance, color='gray', fill=False, linestyle='--', alpha=0.5)
+        ax.add_patch(orbit)
+
+        #ax.plot(pos['X'], pos['Y'], 'o', label=planet)
+        #ax.text(pos['X'] * 1.05, pos['Y'] * 1.05, planet, fontsize=9)
+        
+        # Draw a circular representation of orbit path
+        #distance = np.sqrt(pos['X']**2 + pos['Y']**2) # Radius of the orbit
+        #orbit = plt.Circle((0, 0), distance, color='gray', fill=False, linestyle='--', alpha=0.5)
+        #ax.add_patch(orbit)
+
+    # Set labels and equal scaling
+    ax.set_xlabel("X (scaled AU)")
+    ax.set_ylabel("Y (scaled AU)")
+    ax.set_aspect('equal', 'box')
+    ax.set_title("Top-Down View of the Solar System (X-Y Plane)")
+    ax.legend()
+    plt.grid(True)
+    plt.show()
+
+    # Example data for demonstration
+    # Replace these with actual X, Y values in Astronomical Units (AU) scaled for visualization.
+    
 # Main function to execute the planetary positioning project.
 def main():
     print("Welcome to the Planetary Positioning Project!")
-    date = '19.08.2000'
+    date = '05.08.2023'
     planet_positions = get_planet_positions(date)
-    plot_positions(planet_positions)
+    # plot_positions(planet_positions)
+    plot_solar_system_2d(planet_positions)
 
     ### Prints for debugging ###
     #print(start_date_time)
@@ -111,12 +173,6 @@ def main():
     
     # Print the URL with parameters
     # print(f"Requesting URL: {response.url}")
-
-    # Manually construct the URL with the correct encoding
-    #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
-    #full_url = f"{url}?{query_string}"
-    #print(f"Requesting URL: {full_url}")
-
 
 if __name__ == "__main__":
     main()
