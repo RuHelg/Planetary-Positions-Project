@@ -3,6 +3,7 @@ import datetime
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# Fetches the positions of the planets relative to the Sun for a given date.
 def get_planet_positions(date):
     url = "https://ssd.jpl.nasa.gov/api/horizons.api"
     planets = {
@@ -23,8 +24,6 @@ def get_planet_positions(date):
     # Convert input date from dd.mm.yyyy to "YYYY-MMM-DD HH:MN"
     start_date_time = datetime.datetime.strptime(start_date_time, "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
     stop_date_time = datetime.datetime.strptime(stop_date_time, "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
-    # print(start_date_time)
-    # print(stop_date_time)
 
     planet_positions = {}
     for planet, code in planets.items():
@@ -41,18 +40,10 @@ def get_planet_positions(date):
             'STOP_TIME': f"'{stop_date_time}'"}
         
         response = requests.get(url, params=params)
-        # Print the URL with parameters
-        # print(f"Requesting URL: {response.url}")
-        
-        # Manually construct the URL with the correct encoding
-        #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
-        #full_url = f"{url}?{query_string}"
-        #print(f"Requesting URL: {full_url}")
-        #response = requests.get(full_url)
-
 
         if response.status_code == 200:
             data = response.text
+
             # Locate the section with $$SOE and $$EOE
             soe_index = data.find("$$SOE")
             eoe_index = data.find("$$EOE")
@@ -65,12 +56,12 @@ def get_planet_positions(date):
                 vector_parts = vector_data.split(',')
                 
                 try:
-                    # Extract X, Y, Z values and convert them to floats
+                    # Extract X, Y, Z values and convert to floats
                     x = float(vector_parts[2].strip())
                     y = float(vector_parts[3].strip())
                     z = float(vector_parts[4].strip())
                     planet_positions[planet] = {'X': x, 'Y': y, 'Z': z}
-                    #print(f"{planet} position: X = {x}, Y = {y}, Z = {z}")
+                    
                 except (IndexError, ValueError) as e:
                     print(f"Error parsing position data for {planet}: {e}")
             else:
@@ -81,17 +72,17 @@ def get_planet_positions(date):
 
     return planet_positions
 
-
+# Plots the positions of the planets in a 3D scatter plot.
 def plot_positions(planet_positions):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # Plot each planet's position
+    # Plot each planets position
     for planet, pos in planet_positions.items():
         ax.scatter(pos['X'], pos['Y'], pos['Z'], label=planet)
         ax.text(pos['X'], pos['Y'], pos['Z'], planet, fontsize=9)
 
-    # Plot the Sun at the origin
+    # Plot the Sun at origo
     ax.scatter(0, 0, 0, color='yellow', label='Sun', s=100)
 
     # Set plot labels and title
@@ -102,15 +93,30 @@ def plot_positions(planet_positions):
     ax.legend()
 
     # Save the plot to a file
-    # plt.savefig(PlanetaryPositionsPlot.png)
-    # print(f"Plot saved as {PlanetaryPositionsPlot.png}")
+    #plt.savefig(PlanetaryPositionsPlot.png)
+    #print(f"Plot saved as {PlanetaryPositionsPlot.png}")
     plt.show()
 
+# Main function to execute the planetary positioning project.
 def main():
     print("Welcome to the Planetary Positioning Project!")
     date = '19.08.2000'
     planet_positions = get_planet_positions(date)
     plot_positions(planet_positions)
+
+    ### Prints for debugging ###
+    #print(start_date_time)
+    #print(stop_date_time)
+    #print(f"{planet} position: X = {x}, Y = {y}, Z = {z}")
+    
+    # Print the URL with parameters
+    # print(f"Requesting URL: {response.url}")
+
+    # Manually construct the URL with the correct encoding
+    #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    #full_url = f"{url}?{query_string}"
+    #print(f"Requesting URL: {full_url}")
+
 
 if __name__ == "__main__":
     main()
