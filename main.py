@@ -1,5 +1,7 @@
 import requests
 import datetime
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def get_planet_positions(date):
     url = "https://ssd.jpl.nasa.gov/api/horizons.api"
@@ -79,10 +81,36 @@ def get_planet_positions(date):
 
     return planet_positions
 
+
+def plot_positions(planet_positions):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot each planet's position
+    for planet, pos in planet_positions.items():
+        ax.scatter(pos['X'], pos['Y'], pos['Z'], label=planet)
+        ax.text(pos['X'], pos['Y'], pos['Z'], planet, fontsize=9)
+
+    # Plot the Sun at the origin
+    ax.scatter(0, 0, 0, color='yellow', label='Sun', s=100)
+
+    # Set plot labels and title
+    ax.set_xlabel("X (km)")
+    ax.set_ylabel("Y (km)")
+    ax.set_zlabel("Z (km)")
+    ax.set_title("Planetary Positions Relative to the Sun")
+    ax.legend()
+
+    # Save the plot to a file
+    # plt.savefig(PlanetaryPositionsPlot.png)
+    # print(f"Plot saved as {PlanetaryPositionsPlot.png}")
+    plt.show()
+
 def main():
     print("Welcome to the Planetary Positioning Project!")
     date = '19.08.2000'
     planet_positions = get_planet_positions(date)
+    plot_positions(planet_positions)
 
 if __name__ == "__main__":
     main()
