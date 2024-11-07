@@ -56,3 +56,7 @@
 
 # VS Code
 #.vscode/
+
+# PyCharm Project Files
+.idea/
+*.iml
