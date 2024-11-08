@@ -73,9 +73,9 @@ def get_planet_positions(date):
             print(f"Details: {response.text}")
 
     # Manually construct the URL with the correct encoding
-    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
-    full_url = f"{url}?{query_string}"
-    print(f"Requesting URL: {full_url}")
+    #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    #full_url = f"{url}?{query_string}"
+    #print(f"Requesting URL: {full_url}")
 
     return planet_positions
 
@@ -115,22 +115,52 @@ def plot_positions(planet_positions):
 
 
 def plot_solar_system_2d(planet_positions):
+    max_plot_size = 20  # Maximum size of the plot in cm
     figure_size_cm = 20  # Set the figure size in cm
     fig, ax = plt.subplots(figsize=(figure_size_cm/2.54, figure_size_cm/2.54))
+    
+    # Actual planet diameters [km]
+    sun_diameter = 1392684
+    planet_diameters = {
+    'Mercury': 4880,
+    'Venus': 12104,
+    'Earth': 12756,
+    'Mars': 6792,
+    'Jupiter': 142984,
+    'Saturn': 120536,
+    'Uranus': 51118,
+    'Neptune': 49528
+    }
+
+    # Representative planet colors
+    sun_color = 'yellow'
+    planet_colors = {
+    'Mercury': 'gray',
+    'Venus': 'palegoldenrod',
+    'Earth': 'blue',
+    'Mars': 'orangered',
+    'Jupiter': 'sandybrown',
+    'Saturn': 'goldenrod',
+    'Uranus': 'lightblue',
+    'Neptune': 'mediumblue'
+}
+    
+    # Scale the suns diameter logarithmically for visualization
+    log_sun_size = np.log10(sun_diameter)
 
     # Plot the Sun at the center
-    ax.plot(0, 0, 'yo', markersize=12, label='Sun')
+    ax.plot(0, 0, 'o', markersize=log_sun_size, color=sun_color, label='Sun')
 
     # Plot each planet in the X-Y plane
     for planet, pos in planet_positions.items():
 
-        # Calculate the log10-scaled X and Y coordinates
-        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1)  # Adding 1 to avoid log(0)
+        # Sclale the planet size and position logarithmically for visualization
+        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1) # Adding 1 to avoid log(0)
         log_y = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
-        log_z = np.sign(pos['Z']) * np.log10(abs(pos['Z']) + 1)
+        log_size = np.log10(planet_diameters[planet]) # Scale the size logarithmically
 
         # Plot the planet in the transformed log scale
-        ax.plot(log_x, log_y, 'o', label=planet)
+        ax.plot(log_x, log_y, 'o', markersize=log_size, color=planet_colors[planet], label=planet)
         ax.text(log_x * 1.05, log_y * 1.05, planet, fontsize=9)
 
         # Optional: Draw approximate orbit (circle in log scale)
@@ -157,13 +187,15 @@ def plot_solar_system_2d(planet_positions):
 
     # Example data for demonstration
     # Replace these with actual X, Y values in Astronomical Units (AU) scaled for visualization.
-    
+
+
 # Main function to execute the planetary positioning project.
 def main():
     print("Welcome to the Planetary Positioning Project!")
     date = '05.08.2023'
     planet_positions = get_planet_positions(date)
     # plot_positions(planet_positions)
+
     plot_solar_system_2d(planet_positions)
 
     ### Prints for debugging ###
