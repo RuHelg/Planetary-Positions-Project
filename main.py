@@ -4,109 +4,148 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# Fetches the positions of the planets relative to the Sun for a given date.
-def get_planet_positions(date):
-    url = "https://ssd.jpl.nasa.gov/api/horizons.api"
-    planets = {
-        'Mercury': '199',
-        'Venus': '299',
-        'Earth': '399',
-        'Mars': '499',
-        'Jupiter': '599',
-        'Saturn': '699',
-        'Uranus': '799',
-        'Neptune': '899'
-    }
+class Body:
+    def __init__(self, name, code, diameter, color):
+        self.name = name
+        self.code = code
+        self.diameter = diameter
+        self.color = color
+        self.position = {'X': None, 'Y': None, 'Z': None}
+    
+    def set_position(self, x, y, z):
+        self.position['X'] = x
+        self.position['Y'] = y
+        self.position['Z'] = z
 
-    # Define start and stop time for single instance output
-    start_date_time = date + ' 00:00:00'
-    stop_date_time = date + ' 00:00:01'
+class SolarSystem:
+    def __init__(self):
+        self.body = {
+            'Sun':      Body('Sun',      None, 1392684, 'yellow'),
+            'Mercury':  Body('Mercury', '199', 4880,    'gray'),
+            'Venus':    Body('Venus',   '299', 12104,   'palegoldenrod'),
+            'Earth':    Body('Earth',   '399', 12756,   'blue'),
+            'Mars':     Body('Mars',    '499', 6792,    'orangered'),
+            'Jupiter':  Body('Jupiter', '599', 142984,  'sandybrown'),
+            'Saturn':   Body('Saturn',  '699', 120536,  'goldenrod'),
+            'Uranus':   Body('Uranus',  '799', 51118,   'lightblue'),
+            'Neptune':  Body('Neptune', '899', 49528,   'mediumblue')
+        }
+    
+    # Fetches the positions of the planets relative to the Sun for a given date.
+    def get_body_positions(self, date):
+        url = "https://ssd.jpl.nasa.gov/api/horizons.api"
 
-    # Convert input date from dd.mm.yyyy to "YYYY-MMM-DD HH:MN"
-    start_date_time = datetime.datetime.strptime(start_date_time, "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
-    stop_date_time = datetime.datetime.strptime(stop_date_time, "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
-
-    planet_positions = {}
-    for planet, code in planets.items():
-        params = {
-            'format': 'json',
-            'COMMAND': code,
-            'OBJ_DATA': 'NO',
-            'MAKE_EPHEM': 'YES',
-            'EPHEM_TYPE': 'VECTORS',
-            'CENTER': '500@10',  #  500@10 / 500@sun for sun as the center
-            'OUT_UNITS': 'AU-D',
-            'VEC_TABLE': '1',
-            'CSV_FORMAT': 'YES',
-            'START_TIME': f"'{start_date_time}'",
-            'STOP_TIME': f"'{stop_date_time}'"}
+        # Define start and stop time for single instance output & convert from "dd.mm.yyyy" to "YYYY-MMM-DD HH:MN"
+        start_date_time = datetime.datetime.strptime(date + ' 00:00:00', "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
+        stop_date_time = datetime.datetime.strptime(date + ' 00:00:01', "%d.%m.%Y %H:%M:%S").strftime("%Y-%b-%d %H:%M:%S")
         
-        response = requests.get(url, params=params)
+        # Set the Sun's position to origo
+        self.body['Sun'].set_position(0, 0, 0)
 
-        if response.status_code == 200:
-            data = response.text
+        for body in self.body.values():
+            if body.code:  # Skip the Sun
+                params = {
+                    'format': 'json',
+                    'COMMAND': body.code,
+                    'OBJ_DATA': 'NO',
+                    'MAKE_EPHEM': 'YES',
+                    'EPHEM_TYPE': 'VECTORS',
+                    'CENTER': '500@10',  #  500@10 / 500@sun for sun as the center
+                    'OUT_UNITS': 'AU-D',
+                    'VEC_TABLE': '1',
+                    'CSV_FORMAT': 'YES',
+                    'START_TIME': f"'{start_date_time}'",
+                    'STOP_TIME': f"'{stop_date_time}'"
+                }
+                
+                response = requests.get(url, params=params)
+                
+                if response.status_code == 200:
+                    data = response.text
 
-            # Locate the section with $$SOE and $$EOE
-            soe_index = data.find("$$SOE")
-            eoe_index = data.find("$$EOE")
-            
-            if soe_index != -1 and eoe_index != -1:
-                # Extract the data within $$SOE and $$EOE
-                vector_data = data[soe_index + 5:eoe_index].strip()
-                
-                # Split the line by commas to extract X, Y, Z
-                vector_parts = vector_data.split(',')
-                
-                try:
-                    # Extract X, Y, Z values and convert to floats
-                    x = float(vector_parts[2].strip())
-                    y = float(vector_parts[3].strip())
-                    z = float(vector_parts[4].strip())
-                    planet_positions[planet] = {'X': x, 'Y': y, 'Z': z}
+                    # Locate the section with $$SOE and $$EOE
+                    soe_index = data.find("$$SOE")
+                    eoe_index = data.find("$$EOE")
                     
-                except (IndexError, ValueError) as e:
-                    print(f"Error parsing position data for {planet}: {e}")
-            else:
-                print(f"Error: $$SOE or $$EOE markers not found in the response for {planet}.")
-        else:
-            print(f"Error retrieving data for {planet}: {response.status_code}")
-            print(f"Details: {response.text}")
+                    # Extract the data within $$SOE and $$EOE
+                    if soe_index != -1 and eoe_index != -1:
+                        vector_data = data[soe_index + 5:eoe_index].strip()
 
-    # Manually construct the URL with the correct encoding
-    #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
-    #full_url = f"{url}?{query_string}"
-    #print(f"Requesting URL: {full_url}")
+                        # Split the line by commas to extract X, Y, Z
+                        vector_parts = vector_data.split(',')
+                        try:
+                            x = float(vector_parts[2].strip())
+                            y = float(vector_parts[3].strip())
+                            z = float(vector_parts[4].strip())
+                            body.set_position(x, y, z)
+                        except (IndexError, ValueError) as e:
+                            print(f"Error parsing position data for {body.name}: {e}")
+                    else:
+                        print(f"Error: $$SOE or $$EOE markers not found in the response for {body.name}.")
+                else:
+                    print(f"Error retrieving data for {body.name}: {response.status_code}")
+                    print(f"Details: {response.text}")
 
-    return planet_positions
+                    ### Uncomment for debugging (Manually construct the URL with the correct encoding and prit it) ###
+                    #query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+                    #full_url = f"{url}?{query_string}"
+                    #print(f"Requesting URL: {full_url}")
 
-# Plots the positions of the planets in a 3D scatter plot.
-def plot_positions(planet_positions):
+    # Scale the data of the bodies for visualization
+    def log10_scale_data(self):
+        for body in self.body.values():
+
+            # Scale the position
+            pos = body.position
+            body.position['X'] = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1)  # Adding 1 to avoid log(0)
+            body.position['Y'] = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
+            body.position['Z'] = np.sign(pos['Z']) * np.log10(abs(pos['Z']) + 1)
+
+            # Scale the diameter
+            body.diameter = np.log10(body.diameter)
+
+            # Uncomment for debugging
+            # print(f"{planet.name}: X = {planet.position['X']}, Y = {planet.position['Y']}, Z = {planet.position['Z']}")
+
+    def get_positions(self):
+        return {body.name: body.position for body in self.body.values()}
+    
+    # Retrieves positions, colors and diameters
+    def get_data(self):
+        return {
+            body.name: {
+                'position': body.position,
+                'color': body.color,
+                'diameter': body.diameter
+            }
+            for body in self.body.values()
+        }
+
+# Plots the positions, size and color of the body in a 3D scatter plot.
+def plot_solar_system_3D(solar_system_data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # Plot each planets position
-    for planet, pos in planet_positions.items():
+    for body, data in solar_system_data.items():
+        pos = data['position']
+        color = data['color']
+        diameter = data['diameter']
 
-        # Calculate the log10-scaled X and Y coordinates
-        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1)  # Adding 1 to avoid log(0)
-        log_y = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
-        log_z = np.sign(pos['Z']) * np.log10(abs(pos['Z']) + 1)
-
-        ax.scatter(log_x, log_y, log_z, label=planet)
-        ax.text(log_x, log_y, log_z, planet, fontsize=9)
-
-        #ax.scatter(pos['X'], pos['Y'], pos['Z'], label=planet)
-        #ax.text(pos['X'], pos['Y'], pos['Z'], planet, fontsize=9)
-
-    # Plot the Sun at origo
-    ax.scatter(0, 0, 0, color='yellow', label='Sun', s=100)
+        ax.scatter(pos['X'], pos['Y'], pos['Z'], s=diameter, color=color, label=body)
+        ax.text(pos['X'] * 1.05, pos['Y'] * 1.05, pos['Z'] * 1.05, body, fontsize=9)
 
     # Set plot labels and title
-    ax.set_xlabel("X (AU)")
-    ax.set_ylabel("Y (AU)")
-    ax.set_zlabel("Z (AU)")
+    ax.set_xlabel("X [log10(AU)]")
+    ax.set_ylabel("Y [log10(AU)]")
+    ax.set_zlabel("Z [log10(AU)]")
     ax.set_title("Planetary Positions Relative to the Sun")
     ax.legend()
+
+    # Set equal aspect ratio for all axes
+    #max_range = max([np.max(np.abs([pos['X'], pos['Y'], pos['Z']])) for pos in [data['position'] for data in solar_system_data.values()]])
+    #ax.set_xlim([-max_range, max_range])
+    #ax.set_ylim([-max_range, max_range])
+    #ax.set_zlim([-max_range, max_range])
 
     # Save the plot to a file
     #plt.savefig(PlanetaryPositionsPlot.png)
@@ -114,97 +153,44 @@ def plot_positions(planet_positions):
     plt.show()
 
 
-def plot_solar_system_2d(planet_positions):
-    max_plot_size = 20  # Maximum size of the plot in cm
+def plot_solar_system_2D(solar_system_data):
     figure_size_cm = 20  # Set the figure size in cm
     fig, ax = plt.subplots(figsize=(figure_size_cm/2.54, figure_size_cm/2.54))
     
-    # Actual planet diameters [km]
-    sun_diameter = 1392684
-    planet_diameters = {
-    'Mercury': 4880,
-    'Venus': 12104,
-    'Earth': 12756,
-    'Mars': 6792,
-    'Jupiter': 142984,
-    'Saturn': 120536,
-    'Uranus': 51118,
-    'Neptune': 49528
-    }
+    # Plot each body in the X-Y plane
+    for body, data in solar_system_data.items():
+        pos = data['position']
+        color = data['color']
+        diameter = data['diameter']
 
-    # Representative planet colors
-    sun_color = 'yellow'
-    planet_colors = {
-    'Mercury': 'gray',
-    'Venus': 'palegoldenrod',
-    'Earth': 'blue',
-    'Mars': 'orangered',
-    'Jupiter': 'sandybrown',
-    'Saturn': 'goldenrod',
-    'Uranus': 'lightblue',
-    'Neptune': 'mediumblue'
-}
-    
-    # Scale the suns diameter logarithmically for visualization
-    log_sun_size = np.log10(sun_diameter)
-
-    # Plot the Sun at the center
-    ax.plot(0, 0, 'o', markersize=log_sun_size, color=sun_color, label='Sun')
-
-    # Plot each planet in the X-Y plane
-    for planet, pos in planet_positions.items():
-
-        # Sclale the planet size and position logarithmically for visualization
-        log_x = np.sign(pos['X']) * np.log10(abs(pos['X']) + 1) # Adding 1 to avoid log(0)
-        log_y = np.sign(pos['Y']) * np.log10(abs(pos['Y']) + 1)
-        log_size = np.log10(planet_diameters[planet]) # Scale the size logarithmically
-
-        # Plot the planet in the transformed log scale
-        ax.plot(log_x, log_y, 'o', markersize=log_size, color=planet_colors[planet], label=planet)
-        ax.text(log_x * 1.05, log_y * 1.05, planet, fontsize=9)
+        ax.scatter(pos['X'], pos['Y'], s=diameter, color=color, label=body)
+        ax.text(pos['X'] * 1.05, pos['Y'] * 1.05, body, fontsize=9)
 
         # Optional: Draw approximate orbit (circle in log scale)
-        distance = np.sqrt(log_x**2 + log_y**2) # Radius of the orbit
-        orbit = plt.Circle((0, 0), distance, color='gray', fill=False, linestyle='--', alpha=0.5)
+        orbit = np.sqrt(pos['X']**2 + pos['Y']**2) # Radius of the orbit
+        orbit = plt.Circle((0, 0), orbit, color='gray', fill=False, linestyle='--', alpha=0.5)
         ax.add_patch(orbit)
 
-        #ax.plot(pos['X'], pos['Y'], 'o', label=planet)
-        #ax.text(pos['X'] * 1.05, pos['Y'] * 1.05, planet, fontsize=9)
-        
-        # Draw a circular representation of orbit path
-        #distance = np.sqrt(pos['X']**2 + pos['Y']**2) # Radius of the orbit
-        #orbit = plt.Circle((0, 0), distance, color='gray', fill=False, linestyle='--', alpha=0.5)
-        #ax.add_patch(orbit)
-
     # Set labels and equal scaling
-    ax.set_xlabel("X (scaled AU)")
-    ax.set_ylabel("Y (scaled AU)")
+    ax.set_xlabel("X (log10 scaled AU)")
+    ax.set_ylabel("Y (log10 scaled AU)")
     ax.set_aspect('equal', 'box')
     ax.set_title("Top-Down View of the Solar System (X-Y Plane)")
     ax.legend()
     plt.grid(True)
     plt.show()
 
-    # Example data for demonstration
-    # Replace these with actual X, Y values in Astronomical Units (AU) scaled for visualization.
-
-
 # Main function to execute the planetary positioning project.
 def main():
     print("Welcome to the Planetary Positioning Project!")
-    date = '05.08.2023'
-    planet_positions = get_planet_positions(date)
-    # plot_positions(planet_positions)
-
-    plot_solar_system_2d(planet_positions)
-
-    ### Prints for debugging ###
-    #print(start_date_time)
-    #print(stop_date_time)
-    #print(f"{planet} position: X = {x}, Y = {y}, Z = {z}")
     
-    # Print the URL with parameters
-    # print(f"Requesting URL: {response.url}")
+    date = '31.05.1968'
+
+    solar_system = SolarSystem()
+    solar_system.get_body_positions(date)
+    solar_system.log10_scale_data()
+    plot_data = solar_system.get_data()
+    plot_solar_system_3D(plot_data)
 
 if __name__ == "__main__":
     main()
