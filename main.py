@@ -184,7 +184,7 @@ def plot_solar_system_2D(solar_system_data):
 
 def plot_to_stl(solar_system_data):
     planet_coordinates = {
-        "Sun": (0, 1, 0),
+        "Sun": (0, 0, 0),
         "Mercury": (0.39, 0, 0),
         "Venus": (0.72, 0, 0),
         "Earth": (1.00, 0, 0),
@@ -218,10 +218,10 @@ def plot_to_stl(solar_system_data):
         sphere.apply_translation([x, y, z])  # Move the sphere to the planet's coordinates
         planet_meshes.append(sphere)
 
-    # Step 4: Combine all planet meshes into a single scene
+    # Combine all planet meshes into a single scene-plot
     solar_system_mesh = trimesh.util.concatenate(planet_meshes)
 
-    # Step 5: Export the scene to an STL file
+    # Export the scene-plot to an STL file
     solar_system_mesh.export("solar_system.stl")
     print("STL file for the solar system created as 'solar_system.stl'")
 
