@@ -2,8 +2,32 @@ import requests
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
+# Class to represent the configuration parameters.
+class ConfigParameters:
+    def __init__(self, date=None, text=None):
+        self.date = date
+        self.text = text
+
+    def load_from_file(self, file_path):
+        try:
+            with open(file_path, 'r') as file:
+                for line in file:
+                    line = line.strip()  # Remove extra whitespace
+                    if line and not line.startswith('#') and ':' in line:  # Skip comments and empty lines
+                        key, value = line.split(':', 1)  # Split at the first ':'
+                        key = key.strip()
+                        value = value.strip().strip("'")  # Remove surrounding quotes
+                        if key == "Date":
+                            self.date = value
+                        elif key == "Text":
+                            self.text = value
+        except FileNotFoundError:
+            print(f"Error: Config file '{file_path}' not found.")
+        except Exception as e:
+            print(f"Error reading config file: {e}")
+
+# Class to represent a celestial body.
 class Body:
     def __init__(self, name, code, diameter, color):
         self.name = name
@@ -17,6 +41,7 @@ class Body:
         self.position['Y'] = y
         self.position['Z'] = z
 
+# Class to represent the Solar System and its bodies.
 class SolarSystem:
     def __init__(self):
         self.body = {
@@ -107,6 +132,7 @@ class SolarSystem:
             # Uncomment for debugging
             # print(f"{planet.name}: X = {planet.position['X']}, Y = {planet.position['Y']}, Z = {planet.position['Z']}")
 
+    # Retrieves the positions of the bodies
     def get_positions(self):
         return {body.name: body.position for body in self.body.values()}
     
@@ -152,7 +178,7 @@ def plot_solar_system_3D(solar_system_data):
     #print(f"Plot saved as {PlanetaryPositionsPlot.png}")
     plt.show()
 
-
+# Plots the positions, size and color of the body in a 2D plot.
 def plot_solar_system_2D(solar_system_data):
     figure_size_cm = 20  # Set the figure size in cm
     fig, ax = plt.subplots(figsize=(figure_size_cm/2.54, figure_size_cm/2.54))
@@ -184,13 +210,20 @@ def plot_solar_system_2D(solar_system_data):
 def main():
     print("Welcome to the Planetary Positioning Project!")
     
-    date = '31.05.1968'
+    # Read parameters from the config file
+    print("Reading configuration...")
+    config_parameters = ConfigParameters()
+    config_parameters.load_from_file("config.txt")
+    print(f"Using date: {config_parameters.date}")
+    print(f"Using text: {config_parameters.text}")
 
+    # Create the Solar System and fetch the body positions
     solar_system = SolarSystem()
-    solar_system.get_body_positions(date)
+    solar_system.get_body_positions(config_parameters.date)
     solar_system.log10_scale_data()
     plot_data = solar_system.get_data()
     plot_solar_system_3D(plot_data)
+    plot_solar_system_2D(plot_data)
 
 if __name__ == "__main__":
     main()

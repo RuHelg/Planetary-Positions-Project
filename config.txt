@@ -1,0 +1,7 @@
+### Welcome to the Planetary Positioning Project! ###
+# Modify the parameters below as needed. Ensure:
+# - The date follows the dd.mm.yyyy format.
+# - All parameters are enclosed in single quotes.
+
+Date: '01.01.2024'
+Text: 'Your custom text here'
