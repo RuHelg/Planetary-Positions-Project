@@ -2,6 +2,7 @@ import requests
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+import trimesh
 from mpl_toolkits.mplot3d import Axes3D
 
 class Body:
@@ -180,6 +181,50 @@ def plot_solar_system_2D(solar_system_data):
     plt.grid(True)
     plt.show()
 
+
+def plot_to_stl(solar_system_data):
+    planet_coordinates = {
+        "Sun": (0, 1, 0),
+        "Mercury": (0.39, 0, 0),
+        "Venus": (0.72, 0, 0),
+        "Earth": (1.00, 0, 0),
+        "Mars": (1.52, 0, 0),
+        "Jupiter": (5.20, 0, 0),
+        "Saturn": (9.58, 0, 0),
+        "Uranus": (19.22, 0, 0),
+        "Neptune": (30.05, 0, 0)
+    }
+
+    # Radius of each planet in scale
+    planet_radii = {
+        "Sun": 0.5,
+        "Mercury": 0.03,
+        "Venus": 0.05,
+        "Earth": 0.05,
+        "Mars": 0.04,
+        "Jupiter": 0.1,
+        "Saturn": 0.09,
+        "Uranus": 0.08,
+        "Neptune": 0.08
+    }
+
+    # Create a sphere mesh for each planet and place it at the given coordinates
+    planet_meshes = []
+
+    for planet, coordinates in planet_coordinates.items():
+        x, y, z = coordinates  # Make sure these are numbers, not strings
+        radius = planet_radii.get(planet, 0.05)  # Default radius if not specified
+        sphere = trimesh.creation.icosphere(subdivisions=3, radius=radius)  # Create a sphere mesh
+        sphere.apply_translation([x, y, z])  # Move the sphere to the planet's coordinates
+        planet_meshes.append(sphere)
+
+    # Step 4: Combine all planet meshes into a single scene
+    solar_system_mesh = trimesh.util.concatenate(planet_meshes)
+
+    # Step 5: Export the scene to an STL file
+    solar_system_mesh.export("solar_system.stl")
+    print("STL file for the solar system created as 'solar_system.stl'")
+
 # Main function to execute the planetary positioning project.
 def main():
     print("Welcome to the Planetary Positioning Project!")
@@ -191,6 +236,8 @@ def main():
     solar_system.log10_scale_data()
     plot_data = solar_system.get_data()
     plot_solar_system_3D(plot_data)
+    plot_solar_system_2D(plot_data)
+    plot_to_stl(plot_data)
 
 if __name__ == "__main__":
     main()
