@@ -10,6 +10,8 @@ class ConfigParameters:
         self.date = date
         self.text = text
 
+
+
     def load_from_file(self, file_path):
         try:
             with open(file_path, 'r') as file:
