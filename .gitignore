@@ -3,6 +3,10 @@
 #*.py[cod]
 #*$py.class
 
+# Plots and STL files
+*.eps
+*.stl
+
 # C extensions
 #*.so
 
