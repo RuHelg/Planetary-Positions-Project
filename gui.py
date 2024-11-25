@@ -12,10 +12,6 @@ def generate_file():
         return
     
     with open("config.txt", "w") as file:
-        #file.write("### Welcome to the Planetary Positioning Project! ###\n")
-        #file.write("# Modify the parameters below as needed. Ensure:\n")
-        #file.write("# - The date follows the dd.mm.yyyy format.\n")
-        #file.write("# - All parameters are enclosed in single quotes.\n")
         file.write(f"Date: '{date}'\n")
         file.write(f"Text: '{text}'\n")
     
