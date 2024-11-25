@@ -20,7 +20,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 2. Create and activate a virtual environment::
    python -m venv .venv
    .venv\Scripts\activate  # On Windows
-   # source .venv/bin/activate  # On macOS/Linux
+   source .venv/bin/activate  # On macOS/Linux
 
 3. Install the required dependencies:
    Install python dependencies using `pip install -r requirements.txt`
