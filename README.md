@@ -8,7 +8,8 @@ This project visualizes the positions of planets in the solar system for a given
 It generates 2D and 3D plots of the planetary positions and creates a 3D model of the solar system saved as an STL file.
 <br/><br/>
 
-## This project is licensed under the MIT License. See the LICENSE file for details.
+## LICENCE
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Installation
 
