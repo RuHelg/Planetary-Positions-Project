@@ -1,6 +1,6 @@
 # README
 # Planetary Positioning Project!
-<img src="SolarSystemSTL_profile.jpg" width="42%" alt="Planet positions" align="right">
+<img src="SolarSystemSTL.jpg" width="42%" alt="Planet positions" align="right">
 The Planets posistion at any given date by input.
 <br/><br/>
 This project visualizes the positions of planets in the solar system for a given date.
