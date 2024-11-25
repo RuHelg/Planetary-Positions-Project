@@ -5,6 +5,7 @@
 
 # Plots and STL files
 *.eps
+*.png
 *.stl
 
 # C extensions

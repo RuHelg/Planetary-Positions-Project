@@ -120,9 +120,9 @@ class SolarSystem:
                     #print(f"Requesting URL: {full_url}")
 
     # Scale the data of the bodies for visualization
-    def scale_data(self):
+    def scale_data_log10(self):
 
-        position_scale_factor = 40  # Adjusted for appropriate visualization
+        position_scale_factor = 1  # Adjusted for appropriate visualization
         diameter_scale_factor = 1 # Adjusted for appropriate visualization
 
         for body in self.body.values():
@@ -138,7 +138,7 @@ class SolarSystem:
 
             # Uncomment for debugging
             # print(f"{planet.name}: X = {planet.position['X']}, Y = {planet.position['Y']}, Z = {planet.position['Z']}")
-  
+
     # Retrieves positions, colors and diameters
     def get_plot_data(self):
         return {
@@ -160,7 +160,7 @@ def plot_solar_system_3D(solar_system_data, config_parameters):
         color = data['color']
         diameter = data['diameter']
 
-        ax.scatter(pos['X'], pos['Y'], pos['Z'], s=diameter, color=color, edgecolors='black', label=body)
+        ax.scatter(pos['X'], pos['Y'], pos['Z'], s=diameter*10, color=color, edgecolors='black', label=body)
         
         # Uncomment to add text labels for the bodies
         #ax.text(pos['X'] * 1.2, pos['Y'] * 1.2, pos['Z'] * 1.2, body, fontsize=9)
@@ -169,8 +169,8 @@ def plot_solar_system_3D(solar_system_data, config_parameters):
     ax.set_xlabel("X [log10(AU)]")
     ax.set_ylabel("Y [log10(AU)]")
     ax.set_zlabel("Z [log10(AU)]")
-    ax.set_title(f"Planetary Positions {config_parameters.date}")
-    ax.legend()
+    ax.set_title(f"Planetary Positions {config_parameters.date} - {config_parameters.text}")
+    #ax.legend()
 
     # Set equal aspect ratio for all axes
     max_range = max([np.max(np.abs([pos['X'], pos['Y'], pos['Z']])) for pos in [data['position'] for data in solar_system_data.values()]])
@@ -179,7 +179,7 @@ def plot_solar_system_3D(solar_system_data, config_parameters):
     ax.set_zlim([-max_range, max_range])
 
     # Save the plot as an EPS file
-    plt.savefig("plot_3D.eps", format="eps")
+    plt.savefig("plot_3D.png", format="png")
     plt.show()
 
 # Plots the positions, size and color of the body in a 2D plot.
@@ -200,7 +200,7 @@ def plot_solar_system_2D(solar_system_data, config_parameters):
         orbit = plt.Circle((0, 0), orbit, color='gray', fill=False, linestyle='--', alpha=0.5)
         ax.add_patch(orbit)
 
-        ax.scatter(pos['X'], pos['Y'], s=diameter, color=color, edgecolors='black', label=body)
+        ax.scatter(pos['X'], pos['Y'], s=diameter*10, color=color, edgecolors='black', label=body)
         
         # Uncomment to add text labels for the bodies
         #ax.text(pos['X'] * 1.2, pos['Y'] * 1.2, body, fontsize=9)
@@ -209,12 +209,12 @@ def plot_solar_system_2D(solar_system_data, config_parameters):
     ax.set_xlabel("X [log10(AU)]")
     ax.set_ylabel("Y [log10(AU)]")
     ax.set_aspect('equal', 'box')
-    ax.set_title(f"XY-plane Planetary Positions {config_parameters.date}")
-    ax.legend()
+    ax.set_title(f"Planetary Positions {config_parameters.date} - {config_parameters.text}")
+    #ax.legend()
 
     # Save the plot as an EPS file
     plt.grid(True)
-    plt.savefig("plot_2D.eps", format="eps")
+    plt.savefig("plot_2D.png", format="png")
     plt.show()
 
 
@@ -388,7 +388,7 @@ def add_body_to_disc(orbit_vertices, orbit_faces, solar_system_data, disc_height
         radius = data['diameter'] / 2
 
         # Position the sphere on top of the disc
-        body_center = (pos['X'], pos['Y'], disc_height)  # 3 mm disc thickness
+        body_center = (pos['X'], pos['Y'], disc_height)
         sphere_vertices, sphere_faces = create_body(body_center, radius, body_resolution=body_resolution)
 
         # Offset faces for the new sphere vertices
@@ -413,11 +413,22 @@ def save_to_stl(vertices, faces, filename):
 # Generate the 3D model of the solar system and save it as an STL file.
 def generate_solar_system_stl(solar_system_data):
 
+    position_scale_factor = 40  # Adjusted for appropriate visualization
+    diameter_scale_factor = 1  # Adjusted for appropriate visualization
+
+    # Apply scaling to the position and size data
+    for body in solar_system_data.values():
+        pos = body['position']
+        pos['X'] *= position_scale_factor
+        pos['Y'] *= position_scale_factor
+        pos['Z'] *= position_scale_factor
+        body['diameter'] *= diameter_scale_factor
+
     # Retrieve the position of Neptune from solar_system_data
     neptune_position = solar_system_data['Neptune']['position']
     
     # Set the disc radius, height and resolution
-    disc_radius = np.sqrt(neptune_position['X']**2 + neptune_position['Y']**2) + 20
+    disc_radius = np.sqrt(neptune_position['X']**2 + neptune_position['Y']**2) + 5
     disc_height = 4
     disc_resolution = 150
 
@@ -457,17 +468,17 @@ def main():
     solar_system.get_body_positions(config_parameters.date)
 
     # Scale the data for better representation
-    solar_system.scale_data()
-    
-    # Get the relevant data for plotting and 3D model generation
-    solar_system_data = solar_system.get_plot_data()
+    solar_system.scale_data_log10()
 
-    #Plot the solar system
-    #plot_solar_system_3D(solar_system_data, config_parameters)
-    #plot_solar_system_2D(solar_system_data, config_parameters)
+    # Get the plot data
+    plot_data = solar_system.get_plot_data()
 
-    # Generate the 3D model of the solar system
-    generate_solar_system_stl(solar_system_data)
+    # Plot the solar system with
+    plot_solar_system_3D(plot_data, config_parameters)
+    plot_solar_system_2D(plot_data, config_parameters)
+
+    # Generate the 3D model of the solar system and save it as an STL file
+    generate_solar_system_stl(plot_data)
 
 if __name__ == "__main__":
     main()
