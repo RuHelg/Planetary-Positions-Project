@@ -3,7 +3,7 @@
 The Planets posistion at any given date by input.
 <br/><br/>
 This project visualizes the positions of planets in the solar system for a given date. It generates 2D and 3D plots of the planetary positions and creates a 3D model of the solar system saved as an STL file.
-<br/><br/>
+<br/><br/><br/><br/>
 
 ## LICENCE
 This project is licensed under the MIT License. See the LICENSE file for details.
