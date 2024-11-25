@@ -13,24 +13,24 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Installation
 
-1. Clone the repository:
-   git clone https://github.com/RuHelg/Planetary-Positions-Project.git
-   cd Planetary-Positions-Project
+1. Clone the repository:<br/>
+   git clone https://github.com/RuHelg/Planetary-Positions-Project.git<br/>
+   cd Planetary-Positions-Project<br/>
 
-2. Create and activate a virtual environment::
-   python -m venv .venv
-   .venv\Scripts\activate  # On Windows
-   source .venv/bin/activate  # On macOS/Linux
+2. Create and activate a virtual environment:<br/>
+   python -m venv .venv<br/>
+   .venv\Scripts\activate  # On Windows<br/>
+   source .venv/bin/activate  # On macOS/Linux<br/>
 
-3. Install the required dependencies:
+3. Install the required dependencies:<br/>
    Install python dependencies using `pip install -r requirements.txt`
 
 ## Create Planetary position plot:
 
-1. Run the GUI to input the desired date and text:
+1. Run the GUI to input the desired date and text:<br/>
    Execute the program by using `python gui.py`
 
-2. Follow the instructions and enter:
+2. Follow the instructions and enter:<br/>
    Desired date and text
 
 You will now have a STL file ready for slicing using Cura or another 3D printer software.
