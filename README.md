@@ -31,3 +31,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
    Desired date and text
 
 You will now have a STL file ready for slicing using Cura or another 3D printer software.
+
+(Original idea from https://github.com/kristianmk/party-hat-generator/)
